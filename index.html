@@ -208,8 +208,42 @@
   }
   .addrow-btn:hover{background:rgba(66,133,244,.06);}
 
-  /* ---------------- Totals ---------------- */
-  .totals-wrap{display:flex; justify-content:flex-end; padding:14px 26px 6px;}
+  /* ---------------- Totals + QR + PAID stamp (normal flow row — avoids
+     position:absolute, which can trigger forced print page-breaks in Chrome
+     when page margins/dimensions change) ---------------- */
+  .mid-row{
+    display:flex; justify-content:space-between; align-items:center;
+    gap:16px; padding:14px 26px 6px;
+  }
+  .qr-paid-col{display:flex; align-items:center; gap:14px; flex:1; min-width:0;}
+
+  .qr-anchor{text-align:center; width:100px; flex-shrink:0;}
+  .qr-caption{font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--blue); margin-bottom:4px;}
+  .qr-img{width:72px; height:72px; border:1px solid var(--line); border-radius:6px; padding:3px; background:#fff;}
+  .qr-hint{font-size:7.5px; color:var(--muted); margin-top:4px; line-height:1.3;}
+
+  .paid-stamp{
+    width:100px; height:100px; flex-shrink:0;
+    border:6px solid var(--red);
+    border-radius:50%;
+    display:none;
+    align-items:center; justify-content:center;
+    transform:rotate(-18deg);
+    color:var(--red);
+    opacity:.88;
+    position:relative;
+  }
+  .sheet.is-paid .paid-stamp{display:flex;}
+  .paid-stamp .inner{text-align:center;}
+  .paid-stamp .txt{
+    font-family:'Poppins',sans-serif; font-weight:800; font-size:19px; letter-spacing:1.5px;
+  }
+  .paid-stamp .date{font-size:7px; font-weight:700; margin-top:2px; letter-spacing:1px;}
+  .paid-stamp::before{
+    content:""; position:absolute; inset:6px; border:1.5px solid var(--red); border-radius:50%;
+  }
+
+  .totals-wrap{flex-shrink:0;}
   .totals{width:290px; font-size:12.5px;}
   .totals .row{display:flex; justify-content:space-between; padding:7px 4px; align-items:center;}
   .totals .row .lbl{color:var(--muted); font-weight:600;}
@@ -226,39 +260,6 @@
   .totals .row.grand .lbl{color:#fff; font-size:13px; font-weight:800; letter-spacing:.02em;}
   .totals .row.grand .val{font-size:16px; font-weight:800; color:var(--yellow);}
   .totals .row.balance .val{color:var(--red); font-weight:800;}
-
-  /* ---------------- PAID stamp + QR (share the whitespace left of totals) ---------------- */
-  .stamp-anchor{position:relative; height:0;}
-  .paid-stamp{
-    position:absolute;
-    top:8px; left:150px;
-    width:120px; height:120px;
-    border:6px solid var(--red);
-    border-radius:50%;
-    display:none;
-    align-items:center; justify-content:center;
-    transform:rotate(-18deg);
-    color:var(--red);
-    opacity:.88;
-    pointer-events:none;
-    z-index:5;
-  }
-  .sheet.is-paid .paid-stamp{display:flex;}
-  .paid-stamp .inner{text-align:center;}
-  .paid-stamp .txt{
-    font-family:'Poppins',sans-serif; font-weight:800; font-size:22px; letter-spacing:2px;
-  }
-  .paid-stamp .date{font-size:8px; font-weight:700; margin-top:2px; letter-spacing:1px;}
-  .paid-stamp::before{
-    content:""; position:absolute; inset:6px; border:1.5px solid var(--red); border-radius:50%;
-  }
-
-  .qr-anchor{
-    position:absolute; top:6px; left:24px; text-align:center; width:100px;
-  }
-  .qr-caption{font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--blue); margin-bottom:4px;}
-  .qr-img{width:72px; height:72px; border:1px solid var(--line); border-radius:6px; padding:3px; background:#fff;}
-  .qr-hint{font-size:7.5px; color:var(--muted); margin-top:4px; line-height:1.3;}
 
   /* ---------------- Notes / Signature ---------------- */
   .bottom-grid{
@@ -326,7 +327,7 @@
   .modal .hint{font-size:11.5px; color:var(--muted); margin-top:12px; line-height:1.6;}
 
   /* ---------------- Mobile / responsive ---------------- */
-  @media (max-width:720px){
+  @media screen and (max-width:720px){
     .toolbar{
       padding:10px 10px; gap:8px;
       overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch;
@@ -362,23 +363,15 @@
     table.items thead th{padding:8px 6px; font-size:10px;}
     table.items tbody td{padding:8px 6px;}
 
-    .totals-wrap{padding:12px 14px 4px;}
-    .totals{width:100%; max-width:280px;}
+    .mid-row{flex-direction:column; align-items:stretch; padding:12px 14px 4px; gap:14px;}
+    .qr-paid-col{justify-content:center;}
+    .qr-img{width:84px; height:84px;}
+    .paid-stamp{width:100px; height:100px; transform:rotate(-8deg);}
+    .totals{width:100%; max-width:100%;}
 
     .bottom-grid{grid-template-columns:1fr; gap:22px; padding:18px 14px 6px;}
     .sig-box{text-align:left;}
     .sig-slot{justify-content:flex-start;}
-
-    .stamp-anchor{
-      height:auto; display:flex; flex-direction:column; align-items:center;
-      gap:8px; margin:10px 0 6px;
-    }
-    .qr-anchor{position:static; width:auto;}
-    .qr-img{width:84px; height:84px;}
-    .paid-stamp{
-      position:static; width:100px; height:100px; margin:0 auto;
-      transform:rotate(-8deg);
-    }
 
     .inv-footer{padding:14px 14px 18px; font-size:10.5px;}
 
@@ -392,7 +385,7 @@
     table.items td input{font-size:14px;}
   }
 
-  @media (max-width:420px){
+  @media screen and (max-width:420px){
     .toolbar .brand{display:none;}
     .inv-header .idbox h1{font-size:17px;}
     .inv-header .idbox .tagline{font-size:9.5px;}
@@ -404,7 +397,7 @@
     .toolbar, .modal-overlay, .addrow-btn, .rmbtn, td.rm, th.rm{display:none !important;}
     .stage{padding:0;}
     .sheet{
-      box-shadow:none; width:210mm; min-height:0; margin:0;
+      box-shadow:none; width:100%; max-width:100%; min-height:0; margin:0;
     }
     /* Force reliable system fonts for print so page-fit never depends on
        whether Google Fonts finished loading in time. */
@@ -414,7 +407,11 @@
       font-family: Arial, Helvetica, sans-serif !important;
     }
     [contenteditable]:hover, table.items td input:hover{background:transparent !important;}
-    @page{ size:A4; margin:0; }
+    /* Real printers/print dialogs almost never allow true 0 margins — hardware
+       and driver defaults typically reserve ~10-12mm. Designing for that
+       directly (instead of fighting for edge-to-edge) keeps the layout
+       predictable across different printers and OS print dialogs. */
+    @page{ size:A4; margin:12mm; }
   }
 </style>
 </head>
@@ -513,27 +510,29 @@
     <button class="addrow-btn no-print" id="addRowBtn">+ Add Service Line</button>
   </div>
 
-  <div class="stamp-anchor">
-    <div class="qr-anchor">
-      <div class="qr-caption">Verify Invoice</div>
-      <img id="qrImg" class="qr-img" src="" alt="Scan to verify">
-      <div class="qr-hint">Scan to confirm at<br><b>masudppc.com</b></div>
-    </div>
-    <div class="paid-stamp" id="paidStamp">
-      <div class="inner">
-        <div class="txt">PAID</div>
-        <div class="date" id="paidDate">--</div>
+  <div class="mid-row">
+    <div class="qr-paid-col">
+      <div class="qr-anchor">
+        <div class="qr-caption">Verify Invoice</div>
+        <img id="qrImg" class="qr-img" src="" alt="Scan to verify">
+        <div class="qr-hint">Scan to confirm at<br><b>masudppc.com</b></div>
+      </div>
+      <div class="paid-stamp" id="paidStamp">
+        <div class="inner">
+          <div class="txt">PAID</div>
+          <div class="date" id="paidDate">--</div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="totals-wrap">
-    <div class="totals">
-      <div class="row subtotal"><span class="lbl">Subtotal</span><span class="val" id="subtotalVal">0.00</span></div>
-      <div class="row"><span class="lbl">Discount</span><input type="number" id="discountInput" value="0" min="0" step="0.01"></div>
-      <div class="row grand"><span class="lbl">Grand Total</span><span class="val" id="grandVal">0.00</span></div>
-      <div class="row"><span class="lbl">Advance Paid</span><input type="number" id="advanceInput" value="0" min="0" step="0.01"></div>
-      <div class="row balance"><span class="lbl">Balance Due</span><span class="val" id="balanceVal">0.00</span></div>
+    <div class="totals-wrap">
+      <div class="totals">
+        <div class="row subtotal"><span class="lbl">Subtotal</span><span class="val" id="subtotalVal">0.00</span></div>
+        <div class="row"><span class="lbl">Discount</span><input type="number" id="discountInput" value="0" min="0" step="0.01"></div>
+        <div class="row grand"><span class="lbl">Grand Total</span><span class="val" id="grandVal">0.00</span></div>
+        <div class="row"><span class="lbl">Advance Paid</span><input type="number" id="advanceInput" value="0" min="0" step="0.01"></div>
+        <div class="row balance"><span class="lbl">Balance Due</span><span class="val" id="balanceVal">0.00</span></div>
+      </div>
     </div>
   </div>
 
