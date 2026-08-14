@@ -85,6 +85,7 @@
   }
   .status-chip.unpaid{background:rgba(234,67,53,.18); color:#ff9a90; border:1px solid rgba(234,67,53,.4);}
   .status-chip.paid{background:rgba(52,168,83,.18); color:#7be69a; border:1px solid rgba(52,168,83,.4);}
+  .status-chip.partial{background:rgba(251,188,5,.18); color:#ffd873; border:1px solid rgba(251,188,5,.4);}
   .status-chip.cloud-off{background:rgba(255,255,255,.08); color:#9fb0c8; border:1px solid rgba(255,255,255,.18); text-transform:none; letter-spacing:0;}
   .status-chip.cloud-on{background:rgba(66,133,244,.18); color:#9dc0ff; border:1px solid rgba(66,133,244,.4); text-transform:none; letter-spacing:0;}
   .status-chip.cloud-busy{background:rgba(251,188,5,.18); color:#ffd873; border:1px solid rgba(251,188,5,.4); text-transform:none; letter-spacing:0;}
@@ -710,19 +711,29 @@ function recalc(){
   const discount = parseFloat(document.getElementById('discountInput').value)||0;
   const grand = Math.max(subtotal - discount, 0);
   const advanceInputEl = document.getElementById('advanceInput');
-  let balance;
-  if(paid){
-    // A Paid invoice is fully settled by definition — advance auto-syncs to grand total.
-    advanceInputEl.value = grand.toFixed(2);
-    balance = 0;
-  } else {
-    const advance = parseFloat(advanceInputEl.value)||0;
-    balance = grand - advance;
-  }
+  // Balance Due always reflects what was actually paid — supports partial
+  // payments (e.g. $400 bill, client pays $200 → $200 still shows as due).
+  const advance = parseFloat(advanceInputEl.value)||0;
+  const balance = Math.max(grand - advance, 0);
 
   document.getElementById('subtotalVal').textContent = sym + fmt(subtotal);
   document.getElementById('grandVal').textContent = sym + fmt(grand);
   document.getElementById('balanceVal').textContent = sym + fmt(balance);
+
+  updateStatusChip(paid, advance, balance, grand);
+}
+
+function updateStatusChip(isPaid, advance, balance, grand){
+  const chip = document.getElementById('statusChip');
+  if(balance <= 0 && grand > 0){
+    chip.textContent = 'Paid'; chip.className = 'status-chip paid';
+  } else if(isPaid && balance > 0){
+    chip.textContent = 'Paid (Balance Due)'; chip.className = 'status-chip partial';
+  } else if(advance > 0 && balance > 0){
+    chip.textContent = 'Partially Paid'; chip.className = 'status-chip partial';
+  } else {
+    chip.textContent = 'Unpaid'; chip.className = 'status-chip unpaid';
+  }
 }
 document.getElementById('discountInput').addEventListener('input', recalc);
 document.getElementById('advanceInput').addEventListener('input', recalc);
@@ -774,34 +785,23 @@ document.getElementById('invNum').addEventListener('blur', updateQR);
 
 
 /* ============ PAID TOGGLE ============ */
-let advanceBeforePaid = null;
 function setPaid(state){
   paid = state;
   const btn = document.getElementById('btnPaidToggle');
-  const chip = document.getElementById('statusChip');
   if(paid){
     if(!paidDateStr){
       const d = new Date();
       paidDateStr = d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
     }
-    advanceBeforePaid = document.getElementById('advanceInput').value;
     paidSignatureSnapshot = getSavedSignature();
     document.getElementById('paidDate').textContent = paidDateStr;
-    document.getElementById('advanceInput').disabled = true;
     sheet.classList.add('is-paid');
     btn.textContent = '↩ Mark as Unpaid';
     btn.classList.remove('paidbtn'); btn.classList.add('unpaidbtn');
-    chip.textContent = 'Paid'; chip.className = 'status-chip paid';
   } else {
-    if(advanceBeforePaid !== null){
-      document.getElementById('advanceInput').value = advanceBeforePaid;
-      advanceBeforePaid = null;
-    }
-    document.getElementById('advanceInput').disabled = false;
     sheet.classList.remove('is-paid');
     btn.textContent = '✔ Mark as Paid';
     btn.classList.remove('unpaidbtn'); btn.classList.add('paidbtn');
-    chip.textContent = 'Unpaid'; chip.className = 'status-chip unpaid';
   }
   renderSignature();
   recalc();
